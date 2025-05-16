@@ -5,17 +5,17 @@ def shorthand(number):
     if number < 0:
         number = abs(number)
         prefix = "-"
-
+    number = round(number * 1000) / 1000
     if number < 1000:
         return f"{prefix}{number}"
     elif 10 ** 3 <= number < 10 ** 6:
         number = number / 10 ** 3
         if number.is_integer(): number = int(number)
-        return f"{prefix}{number}k"
+        return f"{prefix}{round(number*10)/10}k"
     elif number >= 10 ** 6:
         number = number / 10 ** 6
         if number.is_integer(): number = int(number)
-        return f"{prefix}{number}m"
+        return f"{prefix}{round(number*100)/100}m"
 
 def unshorthand(short):
     short = short.strip().lower()

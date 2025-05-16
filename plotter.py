@@ -43,8 +43,8 @@ def plot(csv_file, start_point, end_point):
     ax.set_aspect('equal')
     ax.tick_params(colors='#B0BEC5')
 
-    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
-    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f'{int(-y):,}'))
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{shorthand(int(x))}'))
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f'{shorthand(int(-y))}'))
 
     cursor = mplcursors.cursor(ax.lines)
 
@@ -54,16 +54,8 @@ def plot(csv_file, start_point, end_point):
             road_info = sel.artist.road_info
             x, y = sel.target[0], -sel.target[1]
             closest = find_closest_point(segments, x, -y, width=2*int(plt.gca().get_xlim()[1]))
-            try:
-                print(shorthand(int(closest[0])))
-                sel.annotation.set(text=f"Road: {road_info['name']}\n{shorthand(int(closest[0]))}, {shorthand(int(closest[1]))}")
-            except:
-                sel.annotation.set(text=f"Road: {road_info['name']}")
-
+            sel.annotation.set(text=f"Road: {road_info['name']}\n{shorthand(int(closest[0]))}, {shorthand(int(closest[1]))}")
             sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8)
-
-    plt.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
-    plt.axvline(x=0, color='gray', linestyle='--', alpha=0.5)
 
     plt.axis([-bounds, bounds, -bounds, bounds])
 

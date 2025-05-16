@@ -50,7 +50,6 @@ def resplice(node_list, point):
     problem_node = closest_segment(node_list, point)
     separation_point = problem_node[2]
     problem_node = [problem_node[0],problem_node[1]]
-    print(problem_node)
     for i in range(len(node_list)):
         if node_list[i] == problem_node:
             print(node_list[i])
@@ -60,17 +59,12 @@ def resplice(node_list, point):
     node_list.append([point, separation_point])
     return node_list
 
-
-def build_graph(segments):
+def find_shortest_path(segments, start_point, end_point):
     g = defaultdict(list)
     for a,b in segments:
         d = math.hypot(b[0]-a[0],b[1]-a[1])
         g[a].append((b,d))
         g[b].append((a,d))
-    return g
-
-def find_shortest_path(segments, start_point, end_point):
-    g = build_graph(segments)
     dist = {start_point: 0}
     prev = {}
     heap = [(0, start_point)]
@@ -98,7 +92,7 @@ def find_closest_point(node_array, cursor_x, cursor_y, width=None):
             if dist < min_dist:
                 min_dist = dist
                 closest_point = (x, z)
-    if width and math.sqrt(abs((cursor_x-closest_point[0])**2 + (cursor_y-closest_point[1])**2)) < width / 40:
+    if width and math.sqrt(abs((cursor_x-closest_point[0])**2 + (cursor_y-closest_point[1])**2)) < width / 30:
         return closest_point
     else: return closest_segment(node_array,[cursor_x,cursor_y])[2]
 
@@ -120,6 +114,3 @@ def closest_segment(nodes, point):
             min_dist = d
             closest = (a, b, proj)
     return closest
-
-if __name__ == "__main__":
-    resplice(splice_nodes(get_node_endpoints()),[100,0])
