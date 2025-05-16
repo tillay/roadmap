@@ -1,38 +1,46 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import mplcursors
-from csvparser import make_nodes
+from csvparser import make_roads
+from pathfinder import splice_nodes, find_shortest_path
 
-bounds = 50000
+bounds = 30 * 10 ** 6 / 8
 
-def plot_roads(nodes_list=None, csv_file=None):
-    if nodes_list is None and csv_file is None:
-        csv_file = "2b2t.csv"
 
-    fig, ax = plt.subplots(figsize=(12, 12))
-
-    if csv_file:
-        nodes_list = make_nodes(csv_file)
-
+def plot(csv_file, start_point, end_point):
+    fig, ax = plt.subplots(figsize=(12, 12), facecolor='#474747')
+    ax.set_facecolor("#6e0000")
     roads_by_name = {}
+    all_segments = []
 
-    for node in nodes_list:
+    for node in make_roads(csv_file):
         name, radius = node[0]
         if name not in roads_by_name:
             roads_by_name[name] = []
 
         points = node[1:]
         x_coords = [p[0] for p in points]
-        y_coords = [p[1] for p in points]
+        z_coords = [p[1] for p in points]
 
-        line, = ax.plot(x_coords, [-y for y in y_coords], color="black", linewidth=1)
-
+        line, = ax.plot(x_coords, [-z for z in z_coords], color="black", linewidth=1)
         line.road_info = {
             'name': name,
         }
 
-    plt.title('2B2T ROADMAP')
-    plt.grid(True)
+        for i in range(len(points) - 1):
+            all_segments.append((points[i], points[i + 1]))
+
+    segments = splice_nodes(all_segments)
+    path = find_shortest_path(segments, start_point, end_point)
+
+    if path:
+        path_x = [p[0] for p in path]
+        path_z = [-p[1] for p in path]
+        ax.plot(path_x, path_z, color="blue", linewidth=2, zorder=10)
+
+        ax.scatter([start_point[0]], [-start_point[1]], color="green", s=50, zorder=20)
+        ax.scatter([end_point[0]], [-end_point[1]], color="red", s=50, zorder=20)
+
     ax.set_aspect('equal')
 
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
@@ -42,15 +50,38 @@ def plot_roads(nodes_list=None, csv_file=None):
 
     @cursor.connect("add")
     def on_add(sel):
-        road_info = sel.artist.road_info
-        sel.annotation.set(text=f"Road: {road_info['name']}")
-        sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8)
+        if hasattr(sel.artist, 'road_info'):
+            road_info = sel.artist.road_info
+            sel.annotation.set(text=f"Road: {road_info['name']}")
+            sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8)
 
     plt.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
     plt.axvline(x=0, color='gray', linestyle='--', alpha=0.5)
 
     plt.axis([-bounds, bounds, -bounds, bounds])
+
+    fig.canvas.mpl_connect('scroll_event', lambda event: zoom_with_mouse(event, ax))
+    plt.get_current_fig_manager().toolbar.pan()
     plt.show()
 
+
+def zoom_with_mouse(event, ax):
+    factor = 0.95 if event.button == 'up' else 1.05
+    cur_xlim = ax.get_xlim()
+    cur_ylim = ax.get_ylim()
+    x_data = event.xdata
+    y_data = event.ydata
+    x_left = x_data - factor * (x_data - cur_xlim[0])
+    x_right = x_data + factor * (cur_xlim[1] - x_data)
+    y_bottom = y_data - factor * (y_data - cur_ylim[0])
+    y_top = y_data + factor * (cur_ylim[1] - y_data)
+    ax.set_xlim([x_left, x_right])
+    ax.set_ylim([y_bottom, y_top])
+    ax.figure.canvas.draw_idle()
+
+
 if __name__ == "__main__":
-    plot_roads(csv_file="2b2t.csv")
+
+    start_point = (1250000,2500000)
+    end_point = (-1000000,1000000)
+    plot("2b2t.csv", start_point, end_point)

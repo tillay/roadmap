@@ -1,0 +1,97 @@
+from csvparser import make_roads
+import math, heapq
+from collections import defaultdict
+
+def intersection(p1, p2, p3, p4):
+    x1,y1 = p1
+    x2,y2 = p2
+    x3,y3 = p3
+    x4,y4 = p4
+    d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
+    if d == 0: return None
+    px = ((x1*y2 - y1*x2)*(x3-x4)-(x1-x2)*(x3*y4 - y3*x4))/d
+    py = ((x1*y2 - y1*x2)*(y3-y4)-(y1-y2)*(x3*y4 - y3*x4))/d
+    if min(x1,x2)<=px<=max(x1,x2) and min(y1,y2)<=py<=max(y1,y2) and min(x3,x4)<=px<=max(x3,x4) and min(y3,y4)<=py<=max(y3,y4):
+        return (px, py)
+    return None
+
+def are_same_points(p1, p2):
+    return abs(p1[0]-p2[0])==0 and abs(p1[1]-p2[1])==0
+
+def get_node_endpoints():
+    endpoints = []
+    nodes = make_roads("2b2t.csv")
+    for i in range(len(nodes)):
+        endpoints.append([nodes[i][1],nodes[i][2]])
+    return endpoints
+
+def splice_nodes(segments):
+    intersections = []
+    for i,(p1,p2) in enumerate(segments):
+        for j in range(i+1,len(segments)):
+            p3,p4 = segments[j]
+            point = intersection(p1,p2,p3,p4)
+            if point is None: continue
+            is_endpoint = are_same_points(point,p1) or are_same_points(point,p2) or are_same_points(point,p3) or are_same_points(point,p4)
+            if not is_endpoint: intersections.append((i,j,point))
+    new_segments = []
+    for i,(p1,p2) in enumerate(segments):
+        pts = [p1,p2]
+        for j,k,pt in intersections:
+            if i==j or i==k: pts.append(pt)
+        vertical = abs(p1[0]-p2[0])<1e-9
+        pts.sort(key=lambda p: p[1] if vertical else p[0])
+        for k in range(len(pts)-1):
+            a,b=pts[k],pts[k+1]
+            if not are_same_points(a,b): new_segments.append((a,b))
+    return new_segments
+
+def build_graph(segments):
+    g = defaultdict(list)
+    for a,b in segments:
+        d = math.hypot(b[0]-a[0],b[1]-a[1])
+        g[a].append((b,d))
+        g[b].append((a,d))
+    return g
+
+def find_shortest_path(segments, start_point, end_point):
+    g = build_graph(segments)
+    dist = {start_point: 0}
+    prev = {}
+    heap = [(0, start_point)]
+    while heap:
+        d,u = heapq.heappop(heap)
+        if u==end_point: break
+        for v,w in g[u]:
+            alt = d + w
+            if v not in dist or alt < dist[v]:
+                dist[v] = alt
+                prev[v] = u
+                heapq.heappush(heap,(alt,v))
+    if end_point not in dist: return []
+    path = [end_point]
+    while path[-1] != start_point: path.append(prev[path[-1]])
+    return path[::-1]
+
+def closest_segment(nodes, point):
+    min_dist = float('inf')
+    closest = None
+    px, py = point
+    for a, b in nodes:
+        x1, y1 = a
+        x2, y2 = b
+        dx, dy = x2 - x1, y2 - y1
+        if dx == dy == 0:
+            proj = (x1, y1)
+        else:
+            t = max(0, min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
+            proj = (x1 + t * dx, y1 + t * dy)
+        d = (proj[0] - px) ** 2 + (proj[1] - py) ** 2
+        if d < min_dist:
+            min_dist = d
+            closest = (a, b, proj)
+    return closest
+
+
+
+print(closest_segment(splice_nodes(get_node_endpoints()),(557730,-1197000)))

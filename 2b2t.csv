@@ -32,7 +32,8 @@
 1m ringroad,ringroad,1m
 1.25m ringroad,ringroad,1.25m
 1.5m ringroad,ringroad,1.5m
-1.765m ringroad,ringroad,1.765m
+Farlands ringroad,ringroad,1.7m
+1.875m ringroad,ringroad,1.875m
 2.5m ringroad,ringroad,2.5m
 3.75m diamond,diamond,3.75m
 3.75m ringroad,ringroad,3.75m
@@ -40,7 +41,7 @@
 +Z Superhighway,highway,0,+,3.75m
 -X Superhighway,highway,-,0,3.75m
 -Z Superhighway,highway,0,-,3.75m
-++ Superhighway,highway,+,+,3.75m
-+- Superhighway,highway,+,-,3.75m
--+ Superhighway,highway,-,+,3.75m
--- Superhighway,highway,-,-,3.75m
++ + Superhighway,highway,+,+,3.75m
++ - Superhighway,highway,+,-,3.75m
+- + Superhighway,highway,-,+,3.75m
+- - Superhighway,highway,-,-,3.75m
