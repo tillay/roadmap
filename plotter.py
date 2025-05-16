@@ -1,14 +1,13 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import mplcursors
-from csvparser import make_roads
-from pathfinder import splice_nodes, find_shortest_path
+from csvparser import make_roads, shorthand
+from pathfinder import *
 
 bounds = 30 * 10 ** 6 / 8
 
-
 def plot(csv_file, start_point, end_point):
-    fig, ax = plt.subplots(figsize=(12, 12), facecolor='#474747')
+    fig, ax = plt.subplots(figsize=(12, 12), facecolor='#37474F')
     ax.set_facecolor("#6e0000")
     roads_by_name = {}
     all_segments = []
@@ -30,7 +29,7 @@ def plot(csv_file, start_point, end_point):
         for i in range(len(points) - 1):
             all_segments.append((points[i], points[i + 1]))
 
-    segments = splice_nodes(all_segments)
+    segments = resplice(resplice(splice_nodes(all_segments), start_point), end_point)
     path = find_shortest_path(segments, start_point, end_point)
 
     if path:
@@ -42,6 +41,7 @@ def plot(csv_file, start_point, end_point):
         ax.scatter([end_point[0]], [-end_point[1]], color="red", s=50, zorder=20)
 
     ax.set_aspect('equal')
+    ax.tick_params(colors='#B0BEC5')
 
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f'{int(-y):,}'))
@@ -52,7 +52,14 @@ def plot(csv_file, start_point, end_point):
     def on_add(sel):
         if hasattr(sel.artist, 'road_info'):
             road_info = sel.artist.road_info
-            sel.annotation.set(text=f"Road: {road_info['name']}")
+            x, y = sel.target[0], -sel.target[1]
+            closest = find_closest_point(segments, x, -y, width=2*int(plt.gca().get_xlim()[1]))
+            try:
+                print(shorthand(int(closest[0])))
+                sel.annotation.set(text=f"Road: {road_info['name']}\n{shorthand(int(closest[0]))}, {shorthand(int(closest[1]))}")
+            except:
+                sel.annotation.set(text=f"Road: {road_info['name']}")
+
             sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8)
 
     plt.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
@@ -63,7 +70,6 @@ def plot(csv_file, start_point, end_point):
     fig.canvas.mpl_connect('scroll_event', lambda event: zoom_with_mouse(event, ax))
     plt.get_current_fig_manager().toolbar.pan()
     plt.show()
-
 
 def zoom_with_mouse(event, ax):
     factor = 0.95 if event.button == 'up' else 1.05
@@ -79,9 +85,7 @@ def zoom_with_mouse(event, ax):
     ax.set_ylim([y_bottom, y_top])
     ax.figure.canvas.draw_idle()
 
-
 if __name__ == "__main__":
-
-    start_point = (1250000,2500000)
-    end_point = (-1000000,1000000)
+    start_point = (423456, 2860000)
+    end_point = (-98743, 1230000)
     plot("2b2t.csv", start_point, end_point)

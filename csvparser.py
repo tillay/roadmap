@@ -1,14 +1,31 @@
 import csv
 
-def unshorthand(shorthand):
-    shorthand = shorthand.strip().lower()
+def shorthand(number):
+    prefix = ""
+    if number < 0:
+        number = abs(number)
+        prefix = "-"
+
+    if number < 1000:
+        return f"{prefix}{number}"
+    elif 10 ** 3 <= number < 10 ** 6:
+        number = number / 10 ** 3
+        if number.is_integer(): number = int(number)
+        return f"{prefix}{number}k"
+    elif number >= 10 ** 6:
+        number = number / 10 ** 6
+        if number.is_integer(): number = int(number)
+        return f"{prefix}{number}m"
+
+def unshorthand(short):
+    short = short.strip().lower()
     try:
-        if shorthand.endswith("k"):
-            return int(float(shorthand[:-1]) * 10**3)
-        elif shorthand.endswith("m"):
-            return int(float(shorthand[:-1]) * 10**6)
+        if short.endswith("k"):
+            return int(float(short[:-1]) * 10**3)
+        elif short.endswith("m"):
+            return int(float(short[:-1]) * 10**6)
         else:
-            return int(float(shorthand))
+            return int(float(short))
     except ValueError:
         return None
 
