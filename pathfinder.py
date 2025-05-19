@@ -1,6 +1,6 @@
-from csvparser import make_roads
+from csvparser import make_roads, shorthand
 import math, heapq
-from collections import defaultdict
+from collections import defaultdict, deque
 
 def intersection(p1, p2, p3, p4):
     x1,y1 = p1
@@ -18,9 +18,9 @@ def intersection(p1, p2, p3, p4):
 def are_same_points(p1, p2):
     return abs(p1[0]-p2[0])==0 and abs(p1[1]-p2[1])==0
 
-def get_node_endpoints():
+def get_node_endpoints(csv_file):
     endpoints = []
-    nodes = make_roads("2b2t.csv")
+    nodes = make_roads(csv_file)
     for i in range(len(nodes)):
         endpoints.append([nodes[i][1],nodes[i][2]])
     return endpoints
@@ -59,28 +59,25 @@ def resplice(node_list, point):
     node_list.append([point, separation_point])
     return node_list
 
+
 def find_shortest_path(segments, start_point, end_point):
-    g = defaultdict(list)
-    for a,b in segments:
-        d = math.hypot(b[0]-a[0],b[1]-a[1])
-        g[a].append((b,d))
-        g[b].append((a,d))
-    dist = {start_point: 0}
-    prev = {}
-    heap = [(0, start_point)]
-    while heap:
-        d,u = heapq.heappop(heap)
-        if u==end_point: break
-        for v,w in g[u]:
-            alt = d + w
-            if v not in dist or alt < dist[v]:
-                dist[v] = alt
-                prev[v] = u
-                heapq.heappush(heap,(alt,v))
-    if end_point not in dist: return []
-    path = [end_point]
-    while path[-1] != start_point: path.append(prev[path[-1]])
-    return path[::-1]
+    graph = defaultdict(list)
+    for a, b in segments:
+        graph[a].append(b)
+        graph[b].append(a)
+    visited = set()
+    queue = deque([(start_point, [start_point])])
+    while queue:
+        node, path = queue.popleft()
+        if node == end_point:
+            return path
+        if node in visited:
+            continue
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                queue.append((neighbor, path + [neighbor]))
+    return []
 
 def find_closest_point(node_array, cursor_x, cursor_y, width=None):
     min_dist = float('inf')
@@ -95,6 +92,13 @@ def find_closest_point(node_array, cursor_x, cursor_y, width=None):
     if width and math.sqrt(abs((cursor_x-closest_point[0])**2 + (cursor_y-closest_point[1])**2)) < width / 30:
         return closest_point
     else: return closest_segment(node_array,[cursor_x,cursor_y])[2]
+
+def get_length(point_list):
+    print(point_list)
+    distance = 0
+    for i in range(len(point_list)-1):
+        distance += math.sqrt(abs((point_list[i][0]-point_list[i+1][0])**2 + (point_list[i+1][1]-point_list[i][1])**2))
+    return distance
 
 def closest_segment(nodes, point):
     min_dist = float('inf')
