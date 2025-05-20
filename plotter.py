@@ -23,6 +23,8 @@ def plot(csv_file, start_point, end_point):
 
     segments = resplice(resplice(get_node_endpoints(csv_file), start_point), end_point)
     path = find_path(segments, start_point, end_point)
+    get_instructions(path)
+
     if path:
         path_x = [p[0] for p in path]
         path_z = [-p[1] for p in path]
@@ -76,4 +78,7 @@ if __name__ == "__main__":
 
     start_point = (r(bounds), r(bounds))
     end_point = (r(bounds), r(bounds))
+    # start_point = (7266, 5000)
+    # end_point = (1887, -3383)
+
     plot("2b2t.csv", start_point, end_point)

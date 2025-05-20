@@ -50,11 +50,31 @@ def find_closest_point(node_array, cursor_x, cursor_y, width=None):
     else: return closest_segment(node_array,[cursor_x,cursor_y])[2]
 
 def get_length(point_list):
-    print(point_list)
     distance = 0
     for i in range(len(point_list)-1):
         distance += math.sqrt(abs((point_list[i][0]-point_list[i+1][0])**2 + (point_list[i+1][1]-point_list[i][1])**2))
     return distance
+
+def get_instructions(point_list):
+    prev_end = point_list[0]
+    for i in range(len(point_list)-2):
+        p1 = point_list[i]
+        p2 = point_list[i+1]
+        p3 = point_list[i+2]
+        dx, dy = p2[0]-p1[0], p2[1]-p1[1]
+        mag1 = math.hypot(dx, dy)
+        dx2, dy2 = p3[0]-p2[0], p3[1]-p2[1]
+        mag2 = math.hypot(dx2, dy2)
+        if mag1 == 0 or mag2 == 0: continue
+        dot = dx*dx2 + dy*dy2
+        angle = math.acos(max(-1, min(1, dot / (mag1 * mag2))))
+        cross = dx*dy2 - dy*dx2
+        if round(angle) != 0:
+            turn_dir = "right" if cross > 0 else "left"
+            print(f"go {shorthand(dist(p2,prev_end))} blocks towards ({shorthand(p2[0])}, {shorthand(p2[1])})")
+            print(f"turn {turn_dir} at ({shorthand(p2[0])}, {shorthand(p2[1])}) with angle {round(angle*180/math.pi)}")
+            prev_end = p2
+
 
 def closest_segment(nodes, point):
     min_dist = float('inf')
@@ -104,7 +124,6 @@ def build_graph(segments):
 
     return graph
 
-
 def dist(a, b):
     return math.hypot(a[0] - b[0], a[1] - b[1])
 
@@ -132,3 +151,7 @@ def dijkstra(graph, start, end):
 def find_path(segments, start, end):
     graph = build_graph(segments)
     return dijkstra(graph, start, end)
+
+if __name__ == "__main__":
+    import os
+    os.system("python3 plotter.py")
