@@ -16,6 +16,7 @@ def shorthand(number):
         number = number / 10 ** 6
         if number.is_integer(): number = int(number)
         return f"{prefix}{round(number*100)/100}m"
+    else: return None
 
 def unshorthand(short):
     short = short.strip().lower()

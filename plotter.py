@@ -1,15 +1,13 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import mplcursors
-from csvparser import make_roads, shorthand
 from pathfinder import *
 
 bounds = 30 * 10 ** 6 / 8
 
 def plot(csv_file, start_point, end_point):
-    fig, ax = plt.subplots(figsize=(12, 12), facecolor='#37474F')
+    fig, ax = plt.subplots(figsize=(6, 6), facecolor='#37474F')
     ax.set_facecolor("#6e0000")
-    roads_by_name = {}
 
     for node in make_roads(csv_file):
         name = node[0]
@@ -23,9 +21,8 @@ def plot(csv_file, start_point, end_point):
             'name': name,
         }
 
-    segments = resplice(resplice(splice_nodes(get_node_endpoints(csv_file)), start_point), end_point)
-    path = find_shortest_path(segments, start_point, end_point)
-
+    segments = resplice(resplice(get_node_endpoints(csv_file), start_point), end_point)
+    path = find_path(segments, start_point, end_point)
     if path:
         path_x = [p[0] for p in path]
         path_z = [-p[1] for p in path]
@@ -51,7 +48,7 @@ def plot(csv_file, start_point, end_point):
             sel.annotation.set(text=f"Road: {road_info['name'][0]}\n{shorthand(int(closest[0]))}, {shorthand(int(-1*closest[1]))}")
             sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8)
 
-    plt.axis([-bounds, bounds, -bounds, bounds])
+    plt.axis((-bounds, bounds, -bounds, bounds))
 
     fig.canvas.mpl_connect('scroll_event', lambda event: zoom_with_mouse(event, ax))
     plt.get_current_fig_manager().toolbar.pan()
@@ -72,6 +69,11 @@ def zoom_with_mouse(event, ax):
     ax.figure.canvas.draw_idle()
 
 if __name__ == "__main__":
-    start_point = (250, 0)
-    end_point = (25000, 0)
+    def r(bound):
+        import random
+        bound = int(bound)
+        return random.randint(-bound, bound)
+
+    start_point = (r(bounds), r(bounds))
+    end_point = (r(bounds), r(bounds))
     plot("2b2t.csv", start_point, end_point)
