@@ -28,7 +28,6 @@ def resplice(node_list, point):
     problem_node = [problem_node[0],problem_node[1]]
     for i in range(len(node_list)):
         if node_list[i] == problem_node:
-            print(node_list[i])
             node_list.pop(i)
     node_list.append([problem_node[0],separation_point])
     node_list.append([separation_point, problem_node[1]])
@@ -55,7 +54,8 @@ def get_length(point_list):
         distance += math.sqrt(abs((point_list[i][0]-point_list[i+1][0])**2 + (point_list[i+1][1]-point_list[i][1])**2))
     return distance
 
-def get_instructions(point_list):
+def get_instructions(point_list, filename):
+    instructions = []
     prev_end = point_list[0]
     for i in range(len(point_list)-2):
         p1 = point_list[i]
@@ -71,10 +71,36 @@ def get_instructions(point_list):
         cross = dx*dy2 - dy*dx2
         if round(angle) != 0:
             turn_dir = "right" if cross > 0 else "left"
-            print(f"go {shorthand(dist(p2,prev_end))} blocks towards ({shorthand(p2[0])}, {shorthand(p2[1])})")
-            print(f"turn {turn_dir} at ({shorthand(p2[0])}, {shorthand(p2[1])}) with angle {round(angle*180/math.pi)}")
+            instructions.append(((shorthand(p2[0]), shorthand(p2[1])), turn_dir, round(angle*180/math.pi), shorthand(dist(p2,prev_end)), get_highway_name(filename, p2, p3)))
             prev_end = p2
+    return instructions
 
+def on_segment(p, q, r):
+    return (min(p[0], r[0]) <= q[0] <= max(p[0], r[0]) and
+            min(p[1], r[1]) <= q[1] <= max(p[1], r[1]))
+
+def orientation(p, q, r):
+    val = (q[1]-p[1]) * (r[0]-q[0]) - (q[0]-p[0]) * (r[1]-q[1])
+    if val == 0: return 0
+    return 1 if val > 0 else 2
+
+def on_highway(p1, p2, p3, p4):
+
+    o1 = orientation(p3, p4, p1)
+    o2 = orientation(p3, p4, p2)
+    o3 = orientation(p1, p2, p3)
+    o4 = orientation(p1, p2, p4)
+
+    if o1 == 0 and o2 == 0:
+        return on_segment(p3, p1, p4) and on_segment(p3, p2, p4)
+    return False
+
+def get_highway_name(filename, p1, p2):
+    roads = make_roads(filename)
+    for i in range(len(roads)):
+        if on_highway(p1, p2, roads[i][1], roads[i][2]):
+            return roads[i][0][0]
+    else: return "open nether"
 
 def closest_segment(nodes, point):
     min_dist = float('inf')

@@ -23,7 +23,9 @@ def plot(csv_file, start_point, end_point):
 
     segments = resplice(resplice(get_node_endpoints(csv_file), start_point), end_point)
     path = find_path(segments, start_point, end_point)
-    get_instructions(path)
+    ins = get_instructions(path, csv_file)
+    for i in range(len(ins)):
+        print(f"Go for {ins[i][3]} blocks to get to {ins[i][4]}. Then, turn {ins[i][2]} degrees to the {ins[i][1]} at {ins[i][0]}.")
 
     if path:
         path_x = [p[0] for p in path]
